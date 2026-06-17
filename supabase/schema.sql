@@ -26,11 +26,18 @@ create table if not exists public.barbers (
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text,
-  role text not null default 'barber' check (role in ('owner', 'admin', 'manager', 'barber')),
+  role text not null default 'barber' check (role in ('owner', 'admin', 'manager', 'salesperson', 'barber')),
   barber_id uuid references public.barbers(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles
+  drop constraint if exists profiles_role_check;
+
+alter table public.profiles
+  add constraint profiles_role_check
+  check (role in ('owner', 'admin', 'manager', 'salesperson', 'barber'));
 
 create table if not exists public.services (
   id uuid primary key default gen_random_uuid(),
@@ -194,7 +201,7 @@ with check (id = auth.uid() or public.current_user_role() in ('owner', 'admin'))
 drop policy if exists "barbers_select_role_aware" on public.barbers;
 create policy "barbers_select_role_aware" on public.barbers
 for select to authenticated
-using (public.current_user_role() in ('owner', 'admin', 'manager') or id = public.current_user_barber_id());
+using (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson') or id = public.current_user_barber_id());
 
 drop policy if exists "barbers_manage_staff" on public.barbers;
 create policy "barbers_manage_staff" on public.barbers
@@ -216,24 +223,24 @@ with check (public.current_user_role() in ('owner', 'admin', 'manager'));
 drop policy if exists "transactions_select_role_aware" on public.transactions;
 create policy "transactions_select_role_aware" on public.transactions
 for select to authenticated
-using (public.current_user_role() in ('owner', 'admin', 'manager') or barber_id = public.current_user_barber_id());
+using (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson') or barber_id = public.current_user_barber_id());
 
 drop policy if exists "transactions_manage_staff" on public.transactions;
 create policy "transactions_manage_staff" on public.transactions
 for all to authenticated
-using (public.current_user_role() in ('owner', 'admin', 'manager'))
-with check (public.current_user_role() in ('owner', 'admin', 'manager'));
+using (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson'))
+with check (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson'));
 
 drop policy if exists "expenses_select_staff" on public.expenses;
 create policy "expenses_select_staff" on public.expenses
 for select to authenticated
-using (public.current_user_role() in ('owner', 'admin', 'manager'));
+using (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson'));
 
 drop policy if exists "expenses_manage_staff" on public.expenses;
 create policy "expenses_manage_staff" on public.expenses
 for all to authenticated
-using (public.current_user_role() in ('owner', 'admin', 'manager'))
-with check (public.current_user_role() in ('owner', 'admin', 'manager'));
+using (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson'))
+with check (public.current_user_role() in ('owner', 'admin', 'manager', 'salesperson'));
 
 drop policy if exists "shop_settings_select_authenticated" on public.shop_settings;
 create policy "shop_settings_select_authenticated" on public.shop_settings

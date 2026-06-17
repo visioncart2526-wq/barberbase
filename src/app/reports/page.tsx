@@ -3,7 +3,7 @@ import { ReportsPage } from "@/components/report-settings-pages";
 import { requireRole } from "@/lib/auth";
 
 export default async function ReportsRoute() {
-  const { profile, settings } = await requireRole(["owner", "admin", "manager"]);
+  const { profile, settings } = await requireRole(["owner", "admin", "manager", "salesperson"]);
 
   return (
     <AppShell profile={profile} settings={settings}>

@@ -1,9 +1,9 @@
 import { AppShell } from "@/components/app-shell";
 import { TransactionsPage } from "@/components/management-pages";
-import { getSessionContext } from "@/lib/auth";
+import { requireRole } from "@/lib/auth";
 
 export default async function TransactionsRoute() {
-  const { profile, settings } = await getSessionContext();
+  const { profile, settings } = await requireRole(["owner", "admin", "manager", "salesperson", "barber"]);
 
   return (
     <AppShell profile={profile} settings={settings}>

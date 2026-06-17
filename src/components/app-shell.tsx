@@ -34,9 +34,9 @@ const navigation: NavigationItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["owner", "admin", "manager", "barber"] },
   { href: "/barbers", label: "Barbers", icon: Users, roles: ["owner", "admin", "manager"] },
   { href: "/services", label: "Services", icon: Scissors, roles: ["owner", "admin", "manager"] },
-  { href: "/transactions", label: "Sales", icon: CalendarClock, roles: ["owner", "admin", "manager", "barber"] },
-  { href: "/expenses", label: "Expenses", icon: WalletCards, roles: ["owner", "admin", "manager"] },
-  { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner", "admin", "manager"] },
+  { href: "/transactions", label: "Sales", icon: CalendarClock, roles: ["owner", "admin", "manager", "salesperson", "barber"] },
+  { href: "/expenses", label: "Expenses", icon: WalletCards, roles: ["owner", "admin", "manager", "salesperson"] },
+  { href: "/reports", label: "Reports", icon: BarChart3, roles: ["owner", "admin", "manager", "salesperson"] },
   { href: "/performance", label: "Performance", icon: CircleDollarSign, roles: ["owner", "admin", "manager", "barber"] },
   { href: "/settings", label: "Settings", icon: Settings, roles: ["owner", "admin"] },
 ];

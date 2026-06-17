@@ -37,6 +37,7 @@ export const roleLabels: Record<UserRole, string> = {
   owner: "Owner",
   admin: "Admin",
   manager: "Manager",
+  salesperson: "Salesperson",
   barber: "Barber",
 };
 

@@ -6,7 +6,7 @@ Production-ready MVP for a barbershop operations dashboard built with Next.js, T
 
 - Supabase email/password authentication
 - Protected dashboard routes with role-aware navigation
-- Owner/admin, manager, and barber role support
+- Owner/admin, manager, salesperson, and barber role support
 - KPI dashboard with charts for sales, barbers, expenses, and payment methods
 - CRUD modules for barbers, services, transactions, and expenses
 - Barber-only visibility for personal transactions and performance
@@ -103,12 +103,14 @@ Valid roles:
 - `owner`
 - `admin`
 - `manager`
+- `salesperson`
 - `barber`
 
 ## Row Level Security Summary
 
 - Owners/admins can access all data and settings.
 - Managers can manage barbers, services, transactions, expenses, and reports.
+- Salespeople can access Sales POS, Expenses, and Reports only.
 - Barbers can only view their linked barber record, their own transactions, and their own performance.
 - Shop settings are readable by authenticated users and editable by owners/admins.
 
