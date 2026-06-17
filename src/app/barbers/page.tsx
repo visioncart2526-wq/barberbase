@@ -7,7 +7,7 @@ export default async function BarbersRoute() {
 
   return (
     <AppShell profile={profile} settings={settings}>
-      <BarbersPage />
+      <BarbersPage settings={settings} />
     </AppShell>
   );
 }

@@ -20,7 +20,6 @@ import {
 import {
   decimalToPercent,
   formatCurrency,
-  percentToDecimal,
   toDateInputValue,
   toDateTimeLocalValue,
 } from "@/lib/utils";
@@ -87,7 +86,7 @@ async function deleteRow(target: DeleteTarget) {
   return supabase.from(target.table).delete().eq("id", target.id);
 }
 
-export function BarbersPage() {
+export function BarbersPage({ settings }: { settings: ShopSettings | null }) {
   const supabase = createClient();
   const toast = useToast();
   const [rows, setRows] = useState<Barber[]>([]);
@@ -100,7 +99,6 @@ export function BarbersPage() {
     phone: "",
     email: "",
     status: "active",
-    commission: "50",
     start_date: "",
     notes: "",
   });
@@ -129,7 +127,6 @@ export function BarbersPage() {
       phone: row.phone ?? "",
       email: row.email ?? "",
       status: row.status,
-      commission: String(decimalToPercent(row.default_commission_rate)),
       start_date: toDateInputValue(row.start_date),
       notes: row.notes ?? "",
     });
@@ -137,7 +134,7 @@ export function BarbersPage() {
 
   function reset() {
     setEditingId(null);
-    setForm({ name: "", phone: "", email: "", status: "active", commission: "50", start_date: "", notes: "" });
+    setForm({ name: "", phone: "", email: "", status: "active", start_date: "", notes: "" });
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -147,7 +144,7 @@ export function BarbersPage() {
       phone: form.phone.trim() || null,
       email: form.email.trim() || null,
       status: form.status as "active" | "inactive",
-      default_commission_rate: percentToDecimal(Number(form.commission)),
+      default_commission_rate: settings?.default_commission_rate ?? 0.5,
       start_date: form.start_date || null,
       notes: form.notes.trim() || null,
     };
@@ -184,7 +181,7 @@ export function BarbersPage() {
           <TextInput label="Phone" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           <TextInput label="Email" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} />
           <SelectInput label="Status" value={form.status} onChange={(status) => setForm({ ...form, status })} options={["active", "inactive"]} />
-          <TextInput label="Default commission rate (%)" type="number" min="0" max="100" value={form.commission} onChange={(commission) => setForm({ ...form, commission })} required />
+          <LockedValue label="Commission rate" value={`${decimalToPercent(settings?.default_commission_rate ?? 0.5)}%`} />
           <TextInput label="Start date" type="date" value={form.start_date} onChange={(start_date) => setForm({ ...form, start_date })} />
           <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
           <div className="grid gap-2 sm:flex">
@@ -469,7 +466,6 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
     discount_amount: "0",
     tip_amount: "0",
     payment_method: "cash",
-    commission_rate: String(decimalToPercent(settings?.default_commission_rate ?? 0.5)),
     notes: "",
   });
 
@@ -497,7 +493,8 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
   const selectedService = services.find((service) => service.id === form.service_id);
   const selectedBarber = barbers.find((barber) => barber.id === form.barber_id);
   const gross = Math.max(0, Number(selectedService?.price ?? 0) * Number(form.quantity || 0) - Number(form.discount_amount || 0));
-  const commissionRate = percentToDecimal(Number(form.commission_rate || 0));
+  const commissionRate = settings?.default_commission_rate ?? 0.5;
+  const commissionPercent = decimalToPercent(commissionRate);
   const barberCommission = gross * commissionRate;
   const shopShare = gross - barberCommission;
 
@@ -512,11 +509,9 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
   );
 
   function updateBarber(barberId: string) {
-    const barber = barbers.find((row) => row.id === barberId);
     setForm({
       ...form,
       barber_id: barberId,
-      commission_rate: String(decimalToPercent(barber?.default_commission_rate ?? settings?.default_commission_rate ?? 0.5)),
     });
   }
 
@@ -531,7 +526,6 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
       discount_amount: String(row.discount_amount),
       tip_amount: String(row.tip_amount),
       payment_method: row.payment_method,
-      commission_rate: String(decimalToPercent(row.commission_rate)),
       notes: row.notes ?? "",
     });
   }
@@ -547,7 +541,6 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
       discount_amount: "0",
       tip_amount: "0",
       payment_method: "cash",
-      commission_rate: String(decimalToPercent(settings?.default_commission_rate ?? 0.5)),
       notes: "",
     });
   }
@@ -597,29 +590,33 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
         load();
       }}
       form={canManage ? (
-        <form onSubmit={submit} className="space-y-4">
+        <form onSubmit={submit} className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
           <TextInput label="Date/time" type="datetime-local" value={form.transaction_at} onChange={(transaction_at) => setForm({ ...form, transaction_at })} required />
+          <SelectInput label="Payment method" value={form.payment_method} onChange={(payment_method) => setForm({ ...form, payment_method })} options={paymentMethods} />
           <SelectInput label="Barber" value={form.barber_id} onChange={updateBarber} options={barbers.map((barber) => ({ value: barber.id, label: barber.name }))} required />
           <SelectInput label="Service" value={form.service_id} onChange={(service_id) => setForm({ ...form, service_id })} options={services.map((service) => ({ value: service.id, label: `${service.name} (${formatCurrency(service.price, settings?.currency)})` }))} required />
           <TextInput label="Customer name" value={form.customer_name} onChange={(customer_name) => setForm({ ...form, customer_name })} />
           <TextInput label="Quantity" type="number" min="1" value={form.quantity} onChange={(quantity) => setForm({ ...form, quantity })} required />
           <TextInput label="Discount" type="number" min="0" step="0.01" value={form.discount_amount} onChange={(discount_amount) => setForm({ ...form, discount_amount })} />
           <TextInput label="Tip amount" type="number" min="0" step="0.01" value={form.tip_amount} onChange={(tip_amount) => setForm({ ...form, tip_amount })} />
-          <SelectInput label="Payment method" value={form.payment_method} onChange={(payment_method) => setForm({ ...form, payment_method })} options={paymentMethods} />
-          <TextInput label="Commission rate (%)" type="number" min="0" max="100" value={form.commission_rate} onChange={(commission_rate) => setForm({ ...form, commission_rate })} />
-          <div className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-700">
-            <div className="flex justify-between gap-3"><span>Gross amount</span><strong>{formatCurrency(gross, settings?.currency)}</strong></div>
-            <div className="mt-2 flex justify-between gap-3"><span>Barber commission</span><strong>{formatCurrency(barberCommission, settings?.currency)}</strong></div>
-            <div className="mt-2 flex justify-between gap-3"><span>Shop share</span><strong>{formatCurrency(shopShare, settings?.currency)}</strong></div>
-            <div className="mt-2 text-xs text-zinc-500">Tips are tracked separately and go fully to the barber by default.</div>
+          <LockedValue label="Commission rate" value={`${commissionPercent}%`} />
+          <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} className="md:col-span-2 xl:col-span-1" />
+          <div className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-700 md:col-span-2 xl:col-span-1">
+            <div className="grid gap-2 sm:grid-cols-3 xl:grid-cols-1">
+              <AmountSummary label="Gross amount" value={formatCurrency(gross, settings?.currency)} />
+              <AmountSummary label="Barber commission" value={formatCurrency(barberCommission, settings?.currency)} />
+              <AmountSummary label="Shop share" value={formatCurrency(shopShare, settings?.currency)} />
+            </div>
+            <div className="mt-3 text-xs text-zinc-500">Tips are tracked separately and go fully to the barber by default.</div>
           </div>
-          <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
-          <div className="grid gap-2 sm:flex">
+          <div className="grid gap-2 md:col-span-2 sm:flex xl:col-span-1">
             <button className={buttonClass} type="submit" disabled={!selectedService || !selectedBarber}>{editingId ? "Save sale" : "Add sale"}</button>
             {editingId ? <button className={secondaryButtonClass} type="button" onClick={reset}>Cancel</button> : null}
           </div>
         </form>
       ) : null}
+      formTitle="Record sale"
+      formFirstOnTablet
     >
       {loading ? <LoadingState /> : filtered.length ? (
         <ResponsiveTable
@@ -649,6 +646,8 @@ function CrudFrame({
   deleteTarget,
   onCancelDelete,
   onConfirmDelete,
+  formTitle = "Details",
+  formFirstOnTablet = false,
 }: {
   title: string;
   description: string;
@@ -658,20 +657,22 @@ function CrudFrame({
   deleteTarget: DeleteTarget | null;
   onCancelDelete: () => void;
   onConfirmDelete: () => void;
+  formTitle?: string;
+  formFirstOnTablet?: boolean;
 }) {
   return (
     <div className="space-y-6">
       <PageHeader title={title} description={description} />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
-        <section className="min-w-0 space-y-4">
+        <section className={`min-w-0 space-y-4 ${formFirstOnTablet ? "order-2 xl:order-1" : ""}`}>
           {search}
           {children}
         </section>
         {form ? (
-          <Card className="p-4 sm:p-5">
+          <Card className={`p-4 sm:p-5 ${formFirstOnTablet ? "order-1 xl:order-2" : ""}`}>
             <div className="mb-4 flex items-center gap-2">
               <Plus className="h-4 w-4 text-zinc-500" />
-              <h2 className="text-base font-semibold text-zinc-950">Details</h2>
+              <h2 className="text-base font-semibold text-zinc-950">{formTitle}</h2>
             </div>
             {form}
           </Card>
@@ -765,13 +766,15 @@ function TextareaInput({
   label,
   value,
   onChange,
+  className = "",
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }) {
   return (
-    <label className="block space-y-2">
+    <label className={`block space-y-2 ${className}`}>
       <span className={labelClass}>{label}</span>
       <textarea
         className={`${inputClass} min-h-24`}
@@ -779,6 +782,27 @@ function TextareaInput({
         onChange={(event) => onChange(event.target.value)}
       />
     </label>
+  );
+}
+
+function LockedValue({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-2">
+      <span className={labelClass}>{label}</span>
+      <div className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-700">
+        <span className="font-medium text-zinc-950">{value}</span>
+        <span className="text-xs text-zinc-500">Settings</span>
+      </div>
+    </div>
+  );
+}
+
+function AmountSummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md bg-white p-3 ring-1 ring-zinc-200">
+      <span className="block text-xs font-medium uppercase text-zinc-500">{label}</span>
+      <strong className="mt-1 block break-words text-base text-zinc-950">{value}</strong>
+    </div>
   );
 }
 
