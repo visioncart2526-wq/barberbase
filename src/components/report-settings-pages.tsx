@@ -26,6 +26,8 @@ type ReportData = {
   services: Service[];
 };
 
+type ReportSection = "sales" | "expenses" | "barbers";
+
 function between(dateValue: string, start: string, end: string) {
   const value = dateValue.slice(0, 10);
   return (!start || value >= start) && (!end || value <= end);
@@ -46,6 +48,7 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
     barber: "",
     payment: "",
   });
+  const [activeSection, setActiveSection] = useState<ReportSection>("sales");
 
   useEffect(() => {
     async function load() {
@@ -83,8 +86,12 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
 
   const filteredExpenses = useMemo(() => {
     const rows = data?.expenses ?? [];
-    return rows.filter((row) => between(row.expense_date, filters.start, filters.end));
-  }, [data, filters.start, filters.end]);
+    return rows.filter(
+      (row) =>
+        between(row.expense_date, filters.start, filters.end) &&
+        (!filters.payment || row.payment_method === filters.payment),
+    );
+  }, [data, filters.start, filters.end, filters.payment]);
 
   const reportRows = useMemo(() => {
     const byBarber = new Map<string, { barber: string; services: number; gross: number; tips: number; commission: number; shopShare: number }>();
@@ -113,21 +120,48 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
 
   const profit = totals.shopShare - totals.expenses;
 
+  const exportRows =
+    activeSection === "expenses"
+      ? filteredExpenses
+      : activeSection === "barbers"
+        ? reportRows
+        : filteredTransactions;
+
   function exportReport() {
-    const rows = filteredTransactions.map((row) => ({
-      Date: new Date(row.transaction_at).toLocaleString(),
-      Barber: row.barbers?.name ?? "Unassigned",
-      Service: row.services?.name ?? "Unknown service",
-      Customer: row.customer_name ?? "",
-      Quantity: row.quantity,
-      Gross: row.gross_amount,
-      Tip: row.tip_amount,
-      Commission: row.barber_commission,
-      "Shop Share": row.shop_share,
-      Payment: row.payment_method,
-      Notes: row.notes ?? "",
-    }));
-    downloadCsv(`barberbase-report-${filters.start}-to-${filters.end}.csv`, rows);
+    const rows =
+      activeSection === "expenses"
+        ? filteredExpenses.map((row) => ({
+            Date: row.expense_date,
+            Category: row.category,
+            Vendor: row.vendor,
+            Amount: row.amount,
+            Payment: row.payment_method,
+            Recurring: row.recurring ? "Yes" : "No",
+            Notes: row.notes ?? "",
+          }))
+        : activeSection === "barbers"
+          ? reportRows.map((row) => ({
+              Barber: row.barber,
+              Services: row.services,
+              Gross: row.gross,
+              Tips: row.tips,
+              Commission: row.commission,
+              "Shop Share": row.shopShare,
+            }))
+          : filteredTransactions.map((row) => ({
+              Date: new Date(row.transaction_at).toLocaleString(),
+              Barber: row.barbers?.name ?? "Unassigned",
+              Service: row.services?.name ?? "Unknown service",
+              Customer: row.customer_name ?? "",
+              Quantity: row.quantity,
+              Gross: row.gross_amount,
+              Tip: row.tip_amount,
+              Commission: row.barber_commission,
+              "Shop Share": row.shop_share,
+              Payment: row.payment_method,
+              Notes: row.notes ?? "",
+            }));
+    downloadCsv(`barberbase-${activeSection}-report-${filters.start}-to-${filters.end}.csv`, rows);
   }
 
   if (loading) return <LoadingState />;
@@ -138,7 +172,7 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
         title="Reports"
         description="Daily, weekly, monthly, barber income, expense, and profit reports"
         action={
-          <button className={secondaryButtonClass} type="button" onClick={exportReport} disabled={!filteredTransactions.length}>
+          <button className={secondaryButtonClass} type="button" onClick={exportReport} disabled={!exportRows.length}>
             <Download className="h-4 w-4" />
             Export CSV
           </button>
@@ -169,41 +203,108 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
         <SummaryCard label="Expenses" value={formatCurrency(totals.expenses, settings?.currency)} />
         <SummaryCard label="Profit and loss" value={formatCurrency(profit, settings?.currency)} />
       </div>
-      {reportRows.length ? (
-        <ResponsiveTable
-          headers={["Barber", "Services", "Gross", "Tips", "Commission", "Shop share"]}
-          rows={reportRows.map((row) => [
-            row.barber,
-            row.services,
-            formatCurrency(row.gross, settings?.currency),
-            formatCurrency(row.tips, settings?.currency),
-            formatCurrency(row.commission, settings?.currency),
-            formatCurrency(row.shopShare, settings?.currency),
-          ])}
-        />
-      ) : (
-        <EmptyState title="No report data" description="Try a wider date range or remove filters." />
-      )}
-      <div className="space-y-3">
-        <h2 className="text-base font-semibold text-zinc-950">Transaction history</h2>
-        {filteredTransactions.length ? (
-          <ResponsiveTable
-            headers={["Date", "Barber", "Service", "Customer", "Gross", "Tip", "Commission", "Payment"]}
-            rows={filteredTransactions.map((row) => [
-              new Date(row.transaction_at).toLocaleString(),
-              row.barbers?.name ?? "-",
-              row.services?.name ?? "-",
-              row.customer_name ?? "-",
-              formatCurrency(row.gross_amount, settings?.currency),
-              formatCurrency(row.tip_amount, settings?.currency),
-              formatCurrency(row.barber_commission, settings?.currency),
-              row.payment_method,
-            ])}
-          />
-        ) : (
-          <EmptyState title="No transactions found" description="Try a wider date range or remove filters." />
-        )}
-      </div>
+      <ReportTabs active={activeSection} onChange={setActiveSection} />
+      {activeSection === "sales" ? (
+        <ReportPanel title="Sales transactions">
+          {filteredTransactions.length ? (
+            <ResponsiveTable
+              headers={["Date", "Barber", "Service", "Customer", "Qty", "Gross", "Tip", "Payment"]}
+              rows={filteredTransactions.map((row) => [
+                new Date(row.transaction_at).toLocaleString(),
+                row.barbers?.name ?? "-",
+                row.services?.name ?? "-",
+                row.customer_name ?? "-",
+                row.quantity,
+                formatCurrency(row.gross_amount, settings?.currency),
+                formatCurrency(row.tip_amount, settings?.currency),
+                row.payment_method,
+              ])}
+            />
+          ) : (
+            <EmptyState title="No sales found" description="Try a wider date range or remove filters." />
+          )}
+        </ReportPanel>
+      ) : null}
+      {activeSection === "expenses" ? (
+        <ReportPanel title="Expense report">
+          {filteredExpenses.length ? (
+            <ResponsiveTable
+              headers={["Date", "Category", "Vendor", "Amount", "Payment", "Recurring"]}
+              rows={filteredExpenses.map((row) => [
+                row.expense_date,
+                row.category,
+                row.vendor,
+                formatCurrency(row.amount, settings?.currency),
+                row.payment_method,
+                row.recurring ? "Yes" : "No",
+              ])}
+            />
+          ) : (
+            <EmptyState title="No expenses found" description="Try a wider date range." />
+          )}
+        </ReportPanel>
+      ) : null}
+      {activeSection === "barbers" ? (
+        <ReportPanel title="Barber performance">
+          {reportRows.length ? (
+            <ResponsiveTable
+              headers={["Barber", "Services", "Gross", "Tips", "Commission", "Shop share"]}
+              rows={reportRows.map((row) => [
+                row.barber,
+                row.services,
+                formatCurrency(row.gross, settings?.currency),
+                formatCurrency(row.tips, settings?.currency),
+                formatCurrency(row.commission, settings?.currency),
+                formatCurrency(row.shopShare, settings?.currency),
+              ])}
+            />
+          ) : (
+            <EmptyState title="No barber performance found" description="Try a wider date range or remove filters." />
+          )}
+        </ReportPanel>
+      ) : null}
+    </div>
+  );
+}
+
+function ReportTabs({
+  active,
+  onChange,
+}: {
+  active: ReportSection;
+  onChange: (section: ReportSection) => void;
+}) {
+  const tabs: { value: ReportSection; label: string }[] = [
+    { value: "sales", label: "Sales" },
+    { value: "expenses", label: "Expenses" },
+    { value: "barbers", label: "Barber performance" },
+  ];
+
+  return (
+    <div className="grid gap-2 rounded-lg border border-zinc-200 bg-white p-2 shadow-sm sm:flex">
+      {tabs.map((tab) => (
+        <button
+          key={tab.value}
+          type="button"
+          onClick={() => onChange(tab.value)}
+          className={`min-h-10 rounded-md px-4 py-2 text-sm font-medium transition ${
+            active === tab.value
+              ? "bg-zinc-950 text-white"
+              : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950"
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReportPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <h2 className="text-base font-semibold text-zinc-950">{title}</h2>
+      {children}
     </div>
   );
 }
@@ -311,6 +412,9 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
     default_commission_rate: String(decimalToPercent(settings?.default_commission_rate ?? 0.5)),
     tip_policy: settings?.tip_policy ?? "barber_keeps_all",
     currency: settings?.currency ?? "USD",
+    enable_tip_amount: String(settings?.enable_tip_amount !== false),
+    enable_discount: String(settings?.enable_discount !== false),
+    enable_quantity: String(settings?.enable_quantity !== false),
     business_hours: JSON.stringify(settings?.business_hours ?? defaultBusinessHours, null, 2),
   });
   const [saving, setSaving] = useState(false);
@@ -334,6 +438,9 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
       default_commission_rate: percentToDecimal(Number(form.default_commission_rate)),
       tip_policy: form.tip_policy,
       currency: form.currency.trim().toUpperCase(),
+      enable_tip_amount: form.enable_tip_amount === "true",
+      enable_discount: form.enable_discount === "true",
+      enable_quantity: form.enable_quantity === "true",
       business_hours: businessHours,
     };
 
@@ -357,6 +464,11 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
           <FilterInput label="Shop name" value={form.shop_name} onChange={(shop_name) => setForm({ ...form, shop_name })} required />
           <FilterInput label="Tax rate (%)" type="number" min="0" max="100" value={form.tax_rate} onChange={(tax_rate) => setForm({ ...form, tax_rate })} />
           <FilterInput label="Default commission rate (%)" type="number" min="0" max="100" value={form.default_commission_rate} onChange={(default_commission_rate) => setForm({ ...form, default_commission_rate })} />
+          <div className="grid gap-4 sm:grid-cols-3">
+            <BooleanSelect label="Tip amount field" value={form.enable_tip_amount} onChange={(enable_tip_amount) => setForm({ ...form, enable_tip_amount })} />
+            <BooleanSelect label="Discount field" value={form.enable_discount} onChange={(enable_discount) => setForm({ ...form, enable_discount })} />
+            <BooleanSelect label="Quantity field" value={form.enable_quantity} onChange={(enable_quantity) => setForm({ ...form, enable_quantity })} />
+          </div>
           <label className="space-y-2">
             <span className={labelClass}>Tip policy</span>
             <select className={inputClass} value={form.tip_policy} onChange={(event) => setForm({ ...form, tip_policy: event.target.value as TipPolicy })}>
@@ -375,6 +487,26 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
         </form>
       </Card>
     </div>
+  );
+}
+
+function BooleanSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block space-y-2">
+      <span className={labelClass}>{label}</span>
+      <select className={inputClass} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="true">Enabled</option>
+        <option value="false">Disabled</option>
+      </select>
+    </label>
   );
 }
 

@@ -491,7 +491,10 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
 
   const selectedService = services.find((service) => service.id === form.service_id);
   const selectedBarber = barbers.find((barber) => barber.id === form.barber_id);
-  const gross = Math.max(0, Number(selectedService?.price ?? 0) * Number(form.quantity || 0) - Number(form.discount_amount || 0));
+  const quantity = settings?.enable_quantity === false ? 1 : Number(form.quantity || 1);
+  const discountAmount = settings?.enable_discount === false ? 0 : Number(form.discount_amount || 0);
+  const tipAmount = settings?.enable_tip_amount === false ? 0 : Number(form.tip_amount || 0);
+  const gross = Math.max(0, Number(selectedService?.price ?? 0) * quantity - discountAmount);
   const commissionRate = settings?.default_commission_rate ?? 0.5;
   const commissionPercent = decimalToPercent(commissionRate);
   const barberCommission = gross * commissionRate;
@@ -543,10 +546,10 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
       barber_id: form.barber_id,
       service_id: form.service_id,
       customer_name: form.customer_name.trim() || null,
-      quantity: Number(form.quantity),
+      quantity,
       gross_amount: gross,
-      discount_amount: Number(form.discount_amount || 0),
-      tip_amount: Number(form.tip_amount || 0),
+      discount_amount: discountAmount,
+      tip_amount: tipAmount,
       payment_method: form.payment_method as PaymentMethod,
       commission_rate: commissionRate,
       barber_commission: barberCommission,
@@ -587,9 +590,17 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
           <SelectInput label="Barber" value={form.barber_id} onChange={updateBarber} options={barbers.map((barber) => ({ value: barber.id, label: barber.name }))} required />
           <SelectInput label="Service" value={form.service_id} onChange={(service_id) => setForm({ ...form, service_id })} options={services.map((service) => ({ value: service.id, label: `${service.name} (${formatCurrency(service.price, settings?.currency)})` }))} required />
           <TextInput label="Customer name" value={form.customer_name} onChange={(customer_name) => setForm({ ...form, customer_name })} />
-          <TextInput label="Quantity" type="number" min="1" value={form.quantity} onChange={(quantity) => setForm({ ...form, quantity })} required />
-          <TextInput label="Discount" type="number" min="0" step="0.01" value={form.discount_amount} onChange={(discount_amount) => setForm({ ...form, discount_amount })} />
-          <TextInput label="Tip amount" type="number" min="0" step="0.01" value={form.tip_amount} onChange={(tip_amount) => setForm({ ...form, tip_amount })} />
+          {settings?.enable_quantity === false ? (
+            <LockedValue label="Quantity" value="1" />
+          ) : (
+            <TextInput label="Quantity" type="number" min="1" value={form.quantity} onChange={(quantity) => setForm({ ...form, quantity })} required />
+          )}
+          {settings?.enable_discount === false ? null : (
+            <TextInput label="Discount" type="number" min="0" step="0.01" value={form.discount_amount} onChange={(discount_amount) => setForm({ ...form, discount_amount })} />
+          )}
+          {settings?.enable_tip_amount === false ? null : (
+            <TextInput label="Tip amount" type="number" min="0" step="0.01" value={form.tip_amount} onChange={(tip_amount) => setForm({ ...form, tip_amount })} />
+          )}
           <LockedValue label="Commission rate" value={`${commissionPercent}%`} />
           <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} className="md:col-span-2 xl:col-span-1" />
           <div className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-700 md:col-span-2 xl:col-span-1">

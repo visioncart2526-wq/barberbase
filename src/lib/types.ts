@@ -87,6 +87,9 @@ export type ShopSettings = {
   default_commission_rate: number;
   tip_policy: TipPolicy;
   currency: string;
+  enable_tip_amount: boolean;
+  enable_discount: boolean;
+  enable_quantity: boolean;
   business_hours: Record<string, string>;
   created_at: string;
   updated_at: string;

@@ -83,10 +83,18 @@ create table if not exists public.shop_settings (
   default_commission_rate numeric(5,4) not null default 0.5000 check (default_commission_rate >= 0 and default_commission_rate <= 1),
   tip_policy text not null default 'barber_keeps_all' check (tip_policy in ('barber_keeps_all', 'shop_split', 'pooled')),
   currency text not null default 'USD',
+  enable_tip_amount boolean not null default true,
+  enable_discount boolean not null default true,
+  enable_quantity boolean not null default true,
   business_hours jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.shop_settings
+  add column if not exists enable_tip_amount boolean not null default true,
+  add column if not exists enable_discount boolean not null default true,
+  add column if not exists enable_quantity boolean not null default true;
 
 create index if not exists idx_profiles_role on public.profiles(role);
 create index if not exists idx_profiles_barber_id on public.profiles(barber_id);
@@ -245,6 +253,9 @@ insert into public.shop_settings (
   default_commission_rate,
   tip_policy,
   currency,
+  enable_tip_amount,
+  enable_discount,
+  enable_quantity,
   business_hours
 ) values (
   '10000000-0000-4000-8000-000000000001',
@@ -253,6 +264,9 @@ insert into public.shop_settings (
   0.5000,
   'barber_keeps_all',
   'USD',
+  true,
+  true,
+  true,
   '{
     "monday": "9:00 AM - 6:00 PM",
     "tuesday": "9:00 AM - 6:00 PM",
@@ -268,6 +282,9 @@ insert into public.shop_settings (
   default_commission_rate = excluded.default_commission_rate,
   tip_policy = excluded.tip_policy,
   currency = excluded.currency,
+  enable_tip_amount = excluded.enable_tip_amount,
+  enable_discount = excluded.enable_discount,
+  enable_quantity = excluded.enable_quantity,
   business_hours = excluded.business_hours;
 
 insert into public.barbers (id, name, phone, email, status, default_commission_rate, start_date, notes) values
