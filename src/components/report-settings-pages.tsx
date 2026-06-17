@@ -114,13 +114,18 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
   const profit = totals.shopShare - totals.expenses;
 
   function exportReport() {
-    const rows = reportRows.map((row) => ({
-      Barber: row.barber,
-      Services: row.services,
-      Gross: row.gross,
-      Tips: row.tips,
-      Commission: row.commission,
-      "Shop Share": row.shopShare,
+    const rows = filteredTransactions.map((row) => ({
+      Date: new Date(row.transaction_at).toLocaleString(),
+      Barber: row.barbers?.name ?? "Unassigned",
+      Service: row.services?.name ?? "Unknown service",
+      Customer: row.customer_name ?? "",
+      Quantity: row.quantity,
+      Gross: row.gross_amount,
+      Tip: row.tip_amount,
+      Commission: row.barber_commission,
+      "Shop Share": row.shop_share,
+      Payment: row.payment_method,
+      Notes: row.notes ?? "",
     }));
     downloadCsv(`barberbase-report-${filters.start}-to-${filters.end}.csv`, rows);
   }
@@ -133,7 +138,7 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
         title="Reports"
         description="Daily, weekly, monthly, barber income, expense, and profit reports"
         action={
-          <button className={secondaryButtonClass} type="button" onClick={exportReport} disabled={!reportRows.length}>
+          <button className={secondaryButtonClass} type="button" onClick={exportReport} disabled={!filteredTransactions.length}>
             <Download className="h-4 w-4" />
             Export CSV
           </button>
@@ -179,6 +184,26 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
       ) : (
         <EmptyState title="No report data" description="Try a wider date range or remove filters." />
       )}
+      <div className="space-y-3">
+        <h2 className="text-base font-semibold text-zinc-950">Transaction history</h2>
+        {filteredTransactions.length ? (
+          <ResponsiveTable
+            headers={["Date", "Barber", "Service", "Customer", "Gross", "Tip", "Commission", "Payment"]}
+            rows={filteredTransactions.map((row) => [
+              new Date(row.transaction_at).toLocaleString(),
+              row.barbers?.name ?? "-",
+              row.services?.name ?? "-",
+              row.customer_name ?? "-",
+              formatCurrency(row.gross_amount, settings?.currency),
+              formatCurrency(row.tip_amount, settings?.currency),
+              formatCurrency(row.barber_commission, settings?.currency),
+              row.payment_method,
+            ])}
+          />
+        ) : (
+          <EmptyState title="No transactions found" description="Try a wider date range or remove filters." />
+        )}
+      </div>
     </div>
   );
 }

@@ -454,7 +454,6 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
   const [barbers, setBarbers] = useState<Barber[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -498,15 +497,7 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
   const barberCommission = gross * commissionRate;
   const shopShare = gross - barberCommission;
 
-  const filtered = rows.filter((row) =>
-    [
-      row.customer_name,
-      row.payment_method,
-      row.barbers?.name,
-      row.services?.name,
-      row.notes,
-    ].join(" ").toLowerCase().includes(search.toLowerCase()),
-  );
+  const recentRows = rows.slice(0, 8);
 
   function updateBarber(barberId: string) {
     setForm({
@@ -576,9 +567,9 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
 
   return (
     <CrudFrame
-      title="Sales / Transactions"
-      description={canManage ? "Record daily services, payments, tips, commission, and shop share" : "View your sales, tips, commission, and performance"}
-      search={<SearchBox value={search} onChange={setSearch} placeholder="Search sales" />}
+      title="Sales POS"
+      description={canManage ? "Enter completed services quickly and keep the current shift moving" : "View your most recent sales, tips, commission, and performance"}
+      search={<RecentSalesHeader count={recentRows.length} total={rows.length} />}
       deleteTarget={deleteTarget}
       onCancelDelete={() => setDeleteTarget(null)}
       onConfirmDelete={async () => {
@@ -617,11 +608,12 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
       ) : null}
       formTitle="Record sale"
       formFirstOnTablet
+      formPrimary
     >
-      {loading ? <LoadingState /> : filtered.length ? (
+      {loading ? <LoadingState /> : recentRows.length ? (
         <ResponsiveTable
           headers={["Date", "Barber", "Service", "Gross", "Tip", "Commission", "Payment", ""]}
-          rows={filtered.map((row) => [
+          rows={recentRows.map((row) => [
             new Date(row.transaction_at).toLocaleString(),
             row.barbers?.name ?? "-",
             row.services?.name ?? "-",
@@ -632,8 +624,21 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
             canManage ? <RowActions key={row.id} onEdit={() => edit(row)} onDelete={() => setDeleteTarget({ table: "transactions", id: row.id, label: row.customer_name ?? "sale" })} /> : "",
           ])}
         />
-      ) : <EmptyState title="No transactions found" description="Add sales as barbers complete services, or adjust your filters." />}
+      ) : <EmptyState title="No recent sales" description="Add sales as barbers complete services. Full sales history is available in Reports." />}
     </CrudFrame>
+  );
+}
+
+function RecentSalesHeader({ count, total }: { count: number; total: number }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 className="text-base font-semibold text-zinc-950">Recent sales</h2>
+        <p className="text-sm text-zinc-500">
+          Showing latest {count} of {total}. Use Reports for full transaction history.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -648,6 +653,7 @@ function CrudFrame({
   onConfirmDelete,
   formTitle = "Details",
   formFirstOnTablet = false,
+  formPrimary = false,
 }: {
   title: string;
   description: string;
@@ -659,17 +665,24 @@ function CrudFrame({
   onConfirmDelete: () => void;
   formTitle?: string;
   formFirstOnTablet?: boolean;
+  formPrimary?: boolean;
 }) {
+  const gridClass = formPrimary
+    ? "xl:grid-cols-[minmax(360px,540px)_minmax(0,1fr)]"
+    : "xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]";
+  const listOrderClass = formPrimary || formFirstOnTablet ? "order-2" : "";
+  const formOrderClass = formPrimary || formFirstOnTablet ? "order-1" : "";
+
   return (
     <div className="space-y-6">
       <PageHeader title={title} description={description} />
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
-        <section className={`min-w-0 space-y-4 ${formFirstOnTablet ? "order-2 xl:order-1" : ""}`}>
+      <div className={`grid gap-5 ${gridClass}`}>
+        <section className={`min-w-0 space-y-4 ${listOrderClass} ${formPrimary ? "xl:order-2" : "xl:order-1"}`}>
           {search}
           {children}
         </section>
         {form ? (
-          <Card className={`p-4 sm:p-5 ${formFirstOnTablet ? "order-1 xl:order-2" : ""}`}>
+          <Card className={`p-4 sm:p-5 ${formOrderClass} ${formPrimary ? "xl:order-1" : "xl:order-2"}`}>
             <div className="mb-4 flex items-center gap-2">
               <Plus className="h-4 w-4 text-zinc-500" />
               <h2 className="text-base font-semibold text-zinc-950">{formTitle}</h2>
