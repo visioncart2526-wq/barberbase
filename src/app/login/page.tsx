@@ -63,7 +63,7 @@ function LoginForm() {
             <Scissors className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="text-xl font-semibold text-zinc-950">BarberBase</h1>
+            <h1 className="text-xl font-semibold text-zinc-950">Nonoy Masing</h1>
             <p className="text-sm text-zinc-500">Sign in to your shop dashboard</p>
           </div>
         </div>

@@ -76,7 +76,7 @@ function ShellContent({
           </span>
           <span>
             <span className="block text-sm font-semibold text-zinc-950">
-              {settings?.shop_name ?? "BarberBase"}
+              {settings?.shop_name ?? "Nonoy Masing"}
             </span>
             <span className="block text-xs text-zinc-500">Operations</span>
           </span>
@@ -150,7 +150,7 @@ function ShellContent({
             <Menu className="h-5 w-5" />
           </button>
           <div className="hidden sm:block">
-            <p className="text-sm font-medium text-zinc-950">{settings?.shop_name ?? "BarberBase"}</p>
+            <p className="text-sm font-medium text-zinc-950">{settings?.shop_name ?? "Nonoy Masing"}</p>
             <p className="text-xs text-zinc-500">Live shop performance and operations</p>
           </div>
           <button

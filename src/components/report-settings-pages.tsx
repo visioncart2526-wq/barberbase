@@ -281,7 +281,7 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
   const supabase = createClient();
   const toast = useToast();
   const [form, setForm] = useState({
-    shop_name: settings?.shop_name ?? "BarberBase",
+    shop_name: settings?.shop_name ?? "Nonoy Masing",
     tax_rate: String(decimalToPercent(settings?.tax_rate ?? 0)),
     default_commission_rate: String(decimalToPercent(settings?.default_commission_rate ?? 0.5)),
     tip_policy: settings?.tip_policy ?? "barber_keeps_all",

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BarberBase",
+  title: "Nonoy Masing",
   description: "Barbershop operations dashboard",
 };
 

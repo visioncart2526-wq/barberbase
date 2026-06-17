@@ -78,7 +78,7 @@ create table if not exists public.expenses (
 
 create table if not exists public.shop_settings (
   id uuid primary key default gen_random_uuid(),
-  shop_name text not null default 'BarberBase',
+  shop_name text not null default 'Nonoy Masing',
   tax_rate numeric(5,4) not null default 0.0000 check (tax_rate >= 0 and tax_rate <= 1),
   default_commission_rate numeric(5,4) not null default 0.5000 check (default_commission_rate >= 0 and default_commission_rate <= 1),
   tip_policy text not null default 'barber_keeps_all' check (tip_policy in ('barber_keeps_all', 'shop_split', 'pooled')),
@@ -248,7 +248,7 @@ insert into public.shop_settings (
   business_hours
 ) values (
   '10000000-0000-4000-8000-000000000001',
-  'BarberBase Demo Shop',
+  'Nonoy Masing',
   0.0000,
   0.5000,
   'barber_keeps_all',
