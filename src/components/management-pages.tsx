@@ -41,7 +41,7 @@ function RowActions({
       <button
         type="button"
         onClick={onEdit}
-        className="rounded-md border border-zinc-300 p-2 text-zinc-600 hover:bg-zinc-50"
+        className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-zinc-300 p-2 text-zinc-600 hover:bg-zinc-50"
         aria-label="Edit"
       >
         <Edit2 className="h-4 w-4" />
@@ -50,7 +50,7 @@ function RowActions({
         <button
           type="button"
           onClick={onDelete}
-          className="rounded-md border border-red-200 p-2 text-red-600 hover:bg-red-50"
+          className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-md border border-red-200 p-2 text-red-600 hover:bg-red-50"
           aria-label="Delete"
         >
           <Trash2 className="h-4 w-4" />
@@ -70,8 +70,8 @@ function SearchBox({
   placeholder?: string;
 }) {
   return (
-    <label className="relative block w-full sm:max-w-xs">
-      <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+    <label className="relative block w-full sm:max-w-sm">
+      <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-zinc-400 sm:top-3" />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -187,7 +187,7 @@ export function BarbersPage() {
           <TextInput label="Default commission rate (%)" type="number" min="0" max="100" value={form.commission} onChange={(commission) => setForm({ ...form, commission })} required />
           <TextInput label="Start date" type="date" value={form.start_date} onChange={(start_date) => setForm({ ...form, start_date })} />
           <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:flex">
             <button className={buttonClass} type="submit">{editingId ? "Save barber" : "Add barber"}</button>
             {editingId ? <button className={secondaryButtonClass} type="button" onClick={reset}>Cancel</button> : null}
           </div>
@@ -300,7 +300,7 @@ export function ServicesPage() {
           <TextInput label="Estimated duration in minutes" type="number" min="1" value={form.duration} onChange={(duration) => setForm({ ...form, duration })} required />
           <SelectInput label="Active" value={form.active} onChange={(active) => setForm({ ...form, active })} options={["true", "false"]} />
           <TextareaInput label="Description" value={form.description} onChange={(description) => setForm({ ...form, description })} />
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:flex">
             <button className={buttonClass} type="submit">{editingId ? "Save service" : "Add service"}</button>
             {editingId ? <button className={secondaryButtonClass} type="button" onClick={reset}>Cancel</button> : null}
           </div>
@@ -424,7 +424,7 @@ export function ExpensesPage({ settings }: { settings: ShopSettings | null }) {
           <SelectInput label="Payment method" value={form.payment_method} onChange={(payment_method) => setForm({ ...form, payment_method })} options={paymentMethods} />
           <SelectInput label="Recurring" value={form.recurring} onChange={(recurring) => setForm({ ...form, recurring })} options={["false", "true"]} />
           <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:flex">
             <button className={buttonClass} type="submit">{editingId ? "Save expense" : "Add expense"}</button>
             {editingId ? <button className={secondaryButtonClass} type="button" onClick={reset}>Cancel</button> : null}
           </div>
@@ -608,13 +608,13 @@ export function TransactionsPage({ profile, settings }: { profile: Profile; sett
           <SelectInput label="Payment method" value={form.payment_method} onChange={(payment_method) => setForm({ ...form, payment_method })} options={paymentMethods} />
           <TextInput label="Commission rate (%)" type="number" min="0" max="100" value={form.commission_rate} onChange={(commission_rate) => setForm({ ...form, commission_rate })} />
           <div className="rounded-md bg-zinc-50 p-3 text-sm text-zinc-700">
-            <div className="flex justify-between"><span>Gross amount</span><strong>{formatCurrency(gross, settings?.currency)}</strong></div>
-            <div className="mt-2 flex justify-between"><span>Barber commission</span><strong>{formatCurrency(barberCommission, settings?.currency)}</strong></div>
-            <div className="mt-2 flex justify-between"><span>Shop share</span><strong>{formatCurrency(shopShare, settings?.currency)}</strong></div>
+            <div className="flex justify-between gap-3"><span>Gross amount</span><strong>{formatCurrency(gross, settings?.currency)}</strong></div>
+            <div className="mt-2 flex justify-between gap-3"><span>Barber commission</span><strong>{formatCurrency(barberCommission, settings?.currency)}</strong></div>
+            <div className="mt-2 flex justify-between gap-3"><span>Shop share</span><strong>{formatCurrency(shopShare, settings?.currency)}</strong></div>
             <div className="mt-2 text-xs text-zinc-500">Tips are tracked separately and go fully to the barber by default.</div>
           </div>
           <TextareaInput label="Notes" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
-          <div className="flex gap-2">
+          <div className="grid gap-2 sm:flex">
             <button className={buttonClass} type="submit" disabled={!selectedService || !selectedBarber}>{editingId ? "Save sale" : "Add sale"}</button>
             {editingId ? <button className={secondaryButtonClass} type="button" onClick={reset}>Cancel</button> : null}
           </div>
@@ -662,13 +662,13 @@ function CrudFrame({
   return (
     <div className="space-y-6">
       <PageHeader title={title} description={description} />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="space-y-4">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
+        <section className="min-w-0 space-y-4">
           {search}
           {children}
         </section>
         {form ? (
-          <Card className="p-5">
+          <Card className="p-4 sm:p-5">
             <div className="mb-4 flex items-center gap-2">
               <Plus className="h-4 w-4 text-zinc-500" />
               <h2 className="text-base font-semibold text-zinc-950">Details</h2>
@@ -708,7 +708,7 @@ function TextInput({
   step?: string;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="block space-y-2">
       <span className={labelClass}>{label}</span>
       <input
         className={inputClass}
@@ -738,7 +738,7 @@ function SelectInput({
   required?: boolean;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="block space-y-2">
       <span className={labelClass}>{label}</span>
       <select
         className={inputClass}
@@ -771,7 +771,7 @@ function TextareaInput({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="block space-y-2">
       <span className={labelClass}>{label}</span>
       <textarea
         className={`${inputClass} min-h-24`}
@@ -790,9 +790,35 @@ export function ResponsiveTable({
   rows: React.ReactNode[][];
 }) {
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-zinc-200 text-sm">
+    <>
+      <div className="grid gap-3 sm:hidden">
+        {rows.map((row, rowIndex) => (
+          <Card key={rowIndex} className="p-4">
+            <dl className="space-y-3">
+              {row.map((cell, cellIndex) => {
+                const header = headers[cellIndex];
+                if (!header) {
+                  return cell ? (
+                    <div key={cellIndex} className="pt-1">
+                      {cell}
+                    </div>
+                  ) : null;
+                }
+
+                return (
+                  <div key={cellIndex} className="grid grid-cols-[7.5rem_minmax(0,1fr)] gap-3">
+                    <dt className="text-xs font-medium uppercase text-zinc-500">{header}</dt>
+                    <dd className="min-w-0 break-words text-sm text-zinc-800">{cell}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </Card>
+        ))}
+      </div>
+      <Card className="hidden min-w-0 overflow-hidden sm:block">
+        <div className="min-w-0 overflow-x-auto">
+          <table className="min-w-full divide-y divide-zinc-200 text-sm">
           <thead className="bg-zinc-50">
             <tr>
               {headers.map((header) => (
@@ -816,5 +842,6 @@ export function ResponsiveTable({
         </table>
       </div>
     </Card>
+    </>
   );
 }

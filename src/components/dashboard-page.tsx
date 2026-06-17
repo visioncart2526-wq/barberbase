@@ -227,11 +227,13 @@ export function DashboardPage({
             : "Shop income, barber performance, expenses, and profit"
         }
       />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         {kpis.map(([label, value]) => (
           <Card key={label} className="p-4">
             <p className="text-xs font-medium uppercase text-zinc-500">{label}</p>
-            <p className="mt-3 text-2xl font-semibold text-zinc-950">{value}</p>
+            <p className="mt-3 break-words text-xl font-semibold text-zinc-950 sm:text-2xl">
+              {value}
+            </p>
           </Card>
         ))}
       </div>
@@ -267,10 +269,10 @@ function ChartCard({
   type: "bar" | "pie";
 }) {
   return (
-    <Card className="p-4">
+    <Card className="p-3 sm:p-4">
       <h2 className="text-base font-semibold text-zinc-950">{title}</h2>
       {data.length ? (
-        <div className="mt-4 h-72">
+        <div className="mt-4 h-64 sm:h-72">
           <ResponsiveContainer width="100%" height="100%">
             {type === "bar" ? (
               <BarChart data={data}>

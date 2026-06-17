@@ -11,11 +11,17 @@ export function PageHeader({
 }) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">{title}</h1>
-        {description ? <p className="mt-1 text-sm text-zinc-500">{description}</p> : null}
+      <div className="min-w-0">
+        <h1 className="text-balance text-xl font-semibold tracking-tight text-zinc-950 sm:text-2xl">
+          {title}
+        </h1>
+        {description ? (
+          <p className="mt-1 max-w-3xl text-pretty text-sm leading-6 text-zinc-500">
+            {description}
+          </p>
+        ) : null}
       </div>
-      {action}
+      {action ? <div className="shrink-0">{action}</div> : null}
     </div>
   );
 }
@@ -51,7 +57,7 @@ export function EmptyState({
 
 export function LoadingState({ label = "Loading" }: { label?: string }) {
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {[0, 1, 2, 3, 4, 5].map((item) => (
         <div key={item} className="h-28 animate-pulse rounded-lg bg-zinc-100" aria-label={label} />
       ))}
@@ -60,12 +66,12 @@ export function LoadingState({ label = "Loading" }: { label?: string }) {
 }
 
 export const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 outline-none transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 disabled:bg-zinc-100";
+  "min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-950 outline-none transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10 disabled:bg-zinc-100 sm:text-sm";
 
 export const labelClass = "text-sm font-medium text-zinc-700";
 
 export const buttonClass =
-  "inline-flex items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-zinc-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60";
 
 export const secondaryButtonClass =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60";

@@ -139,7 +139,7 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
           </button>
         }
       />
-      <Card className="grid gap-4 p-4 md:grid-cols-4">
+      <Card className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-4">
         <FilterInput label="Start date" type="date" value={filters.start} onChange={(start) => setFilters({ ...filters, start })} />
         <FilterInput label="End date" type="date" value={filters.end} onChange={(end) => setFilters({ ...filters, end })} />
         <label className="space-y-2">
@@ -157,7 +157,7 @@ export function ReportsPage({ settings }: { settings: ShopSettings | null }) {
           </select>
         </label>
       </Card>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <SummaryCard label="Gross sales" value={formatCurrency(totals.gross, settings?.currency)} />
         <SummaryCard label="Tips" value={formatCurrency(totals.tips, settings?.currency)} />
         <SummaryCard label="Commission" value={formatCurrency(totals.commission, settings?.currency)} />
@@ -327,7 +327,7 @@ export function SettingsPage({ settings }: { settings: ShopSettings | null }) {
   return (
     <div className="space-y-6">
       <PageHeader title="Settings" description="Configure shop defaults, currency, tip policy, tax, and hours" />
-      <Card className="max-w-2xl p-5">
+      <Card className="max-w-2xl p-4 sm:p-5">
         <form onSubmit={submit} className="space-y-4">
           <FilterInput label="Shop name" value={form.shop_name} onChange={(shop_name) => setForm({ ...form, shop_name })} required />
           <FilterInput label="Tax rate (%)" type="number" min="0" max="100" value={form.tax_rate} onChange={(tax_rate) => setForm({ ...form, tax_rate })} />
@@ -357,7 +357,7 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <Card className="p-4">
       <p className="text-xs font-medium uppercase text-zinc-500">{label}</p>
-      <p className="mt-3 text-xl font-semibold text-zinc-950">{value}</p>
+      <p className="mt-3 break-words text-xl font-semibold text-zinc-950">{value}</p>
     </Card>
   );
 }
@@ -382,7 +382,7 @@ function FilterInput({
   maxLength?: number;
 }) {
   return (
-    <label className="space-y-2">
+    <label className="block space-y-2">
       <span className={labelClass}>{label}</span>
       <input
         className={inputClass}

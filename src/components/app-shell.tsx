@@ -68,14 +68,14 @@ function ShellContent({
   }
 
   const Sidebar = (
-    <aside className="flex h-full w-72 flex-col border-r border-zinc-200 bg-white">
-      <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-5">
-        <Link href="/dashboard" className="flex items-center gap-3">
+    <aside className="flex h-full w-[min(18rem,calc(100vw-2rem))] flex-col border-r border-zinc-200 bg-white lg:w-72">
+      <div className="flex h-16 items-center justify-between border-b border-zinc-200 px-4 sm:px-5">
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-md bg-zinc-950 text-white">
             <Scissors className="h-5 w-5" />
           </span>
-          <span>
-            <span className="block text-sm font-semibold text-zinc-950">
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold text-zinc-950">
               {settings?.shop_name ?? "Nonoy Masing"}
             </span>
             <span className="block text-xs text-zinc-500">Operations</span>
@@ -99,7 +99,7 @@ function ShellContent({
               href={item.href}
               onClick={() => setOpen(false)}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
+                "flex min-h-11 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
                 active
                   ? "bg-zinc-950 text-white"
                   : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950",
@@ -141,7 +141,7 @@ function ShellContent({
         </div>
       ) : null}
       <div className="lg:pl-72">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-zinc-200 bg-white/95 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-3 border-b border-zinc-200 bg-white/95 px-3 backdrop-blur sm:px-6">
           <button
             className="rounded-md p-2 text-zinc-600 hover:bg-zinc-100 lg:hidden"
             onClick={() => setOpen(true)}
@@ -149,20 +149,26 @@ function ShellContent({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <div className="hidden sm:block">
-            <p className="text-sm font-medium text-zinc-950">{settings?.shop_name ?? "Nonoy Masing"}</p>
-            <p className="text-xs text-zinc-500">Live shop performance and operations</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-zinc-950">
+              {settings?.shop_name ?? "Nonoy Masing"}
+            </p>
+            <p className="hidden truncate text-xs text-zinc-500 sm:block">
+              Live shop performance and operations
+            </p>
           </div>
           <button
             type="button"
             onClick={logout}
-            className="inline-flex items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </header>
-        <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-7xl px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+          {children}
+        </main>
       </div>
     </div>
   );
